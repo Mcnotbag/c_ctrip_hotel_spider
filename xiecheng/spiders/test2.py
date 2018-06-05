@@ -64,3 +64,15 @@ import requests
 
 # ip = requests.get("http://dynamic.goubanjia.com/dynamic/get/30f846d90bf66fccdc0448bd294bb2c3.html?sep=3")
 # print(ip.content.decode())
+
+# def sub_str(str):
+#     l = str.group().split('\\')
+#     return l[0] + r'\\' + l[1]
+#
+# with open("..\\..\\list.html","r",encoding="utf-8") as f:
+#     response = f.read()
+#
+# html_str = re.sub(r'\w+\\\w+', sub_str, response)
+# # ret = re.findall(r'\w+\\\w+',response)
+# # print(ret)
+# html_json = json.loads(html_str)

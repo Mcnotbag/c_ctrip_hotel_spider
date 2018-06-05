@@ -30,27 +30,24 @@ import requests
 # print(c)
 from redis import Redis
 # # # # #
-redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
-# # # #
-city_headers = {
-    'Referer': 'http://hotels.ctrip.com/hotel',
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"
-}
-city_response = requests.get("http://hotels.ctrip.com/Domestic/Tool/AjaxGetCitySuggestion.aspx", headers=city_headers)
-ret = re.findall(r'data:"(.*?)"', city_response.content.decode())
-ret = set(ret)
+# redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
+# # # # #
+# city_headers = {
+#     'Referer': 'http://hotels.ctrip.com/hotel',
+#     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"
+# }
+# city_response = requests.get("http://hotels.ctrip.com/Domestic/Tool/AjaxGetCitySuggestion.aspx", headers=city_headers)
+# # ret = re.findall(r'data:"(.*?)"', city_response.content.decode())
+# # ret = set(ret)
 # ret_hot = re.findall(r'suggestion={热门:\[(.*?)\],AB',city_response.content.decode())[0]
 # ret_hot = re.findall(r'data:"(.*?)",',ret_hot)
-# #
-# # # #
-#
-# for i in ret:
+
+# for i in ret_hot:
 #     i.replace("/",'')
 #     ret2 = i.split("|")
 #     ret2.pop(1)
-# # for i in range(20):
 #     redis_server.rpush("city",ret2)
-#
+# #
 # for i in range(100):
 #     city = redis_server.blpop("city2")
 #     city_item = city[1]

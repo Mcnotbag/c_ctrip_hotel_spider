@@ -116,7 +116,7 @@ class XcSpider(RedisSpider):
             html_json = json.loads(html_str)
         except Exception as e:
             print(e)
-            html_str = re.sub(r'[0-9a-zA-Z]+\\[0-9a-zA-Z]+', self.sub_str, html_str)
+            html_str = re.sub(r'\w+\\\w+', self.sub_str, html_str)
         try:
             html_json = json.loads(html_str)
         except Exception as e:
@@ -220,7 +220,9 @@ class XcSpider(RedisSpider):
             if int(cur_page) < int(total_page):
                 print("*"*50)
                 print("当前页数%s页"% cur_page)
+                print("self_page--%s"%self.page)
                 print("当前城市--%s" % cur_city)
+                print("self城市--%s"%self.City)
                 self.nowdate,self.tomorrwdate = process_urltime()
                 yield scrapy.FormRequest(
                     url="http://hotels.ctrip.com/Domestic/Tool/AjaxHotelList.aspx",
@@ -303,7 +305,7 @@ class XcSpider(RedisSpider):
                 f.write(response.body.decode())
         else:
             detail_response = json_response["html"]
-            item["index_price"] = json_response["PriceZl"][0] if json_response["PriceZl"] != [] else 0
+            item["index_price"] = json_response["PriceZl"]
             detail_html = etree.HTML(detail_response)
             tr_list = detail_html.xpath("//tr[@class='clicked hidden']")
 

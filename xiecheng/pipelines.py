@@ -160,8 +160,8 @@ class XiechengPipeline(object):
     def insert_room(self,item):
         # float(min(item["Roomtype"]["type"]["price"]))
 
-        insert = "INSERT INTO Room (Source, HId, RId, Cover, Name, Floor, Area, Price, People, Bed) VALUES ('%d','%d','%d','%s','%s','%s','%s','%.2f','%d','%s')" %(
-            int((item["Source"])),int(item["HId"]),int(item["Roomtype"]["RId"]),str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),
+        insert = "INSERT INTO Room (Source, HId, RId, Cover, Name, Floor, Area, Price, People, Bed) VALUES ('%d','%s','%s','%s','%s','%s','%s','%.2f','%d','%s')" %(
+            int((item["Source"])),str(item["HId"]),str(item["Roomtype"]["RId"]),str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),
             str(item["Roomtype"]["Rfloor"]),str(item["Roomtype"]["Rarea"]),float(item["Roomtype"]["room"]["price"]),int(item["Roomtype"]["room"]["people"]),str(item["Roomtype"]["Rbed"])
         )
 
@@ -277,7 +277,7 @@ class XiechengPipeline(object):
             print(e)
 
     def update_room(self,item):
-        update = "update Room set Cover='%s',Name='%s',Price='%.2f',UpdateTime='%s' where RId='%s'" %(str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),str(datetime.datetime.now())[:23],int(item["Roomtype"]["RId"]))
+        update = "update Room set Cover='%s',Name='%s',Price='%.2f',UpdateTime='%s' where RId='%s'" %(str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),str(datetime.datetime.now())[:23],str(item["Roomtype"]["RId"]))
         try:
             self.cur.execute(update)
             # print("更新成功Room")
