@@ -56,7 +56,7 @@ class XiechengPipeline(object):
         item["Latitude"] = item["street"].split("|")[1] if item["street"] != '' else []
         item["Longitude"] = item["street"].split("|")[0] if item["street"] != '' else []
         # 清洗酒店介绍
-        item["Description"] = item["Description"][0].replace("<br>","").replace("\u3000","") if item["Description"] != [] else []
+        item["Description"] = item["Description"][0].replace("<br>","").replace("\u3000","").replace("'",'') if item["Description"] != [] else []
 
         # 清洗有无早餐
         item["Roomtype"]["room"]["breakfast"] = item["Roomtype"]["room"]["breakfast"][0] if item["Roomtype"]["room"]["breakfast"] != [] else "有早"
@@ -331,6 +331,7 @@ class XiechengPipeline(object):
         except Exception as e:
             print("执行失败hotel")
             print(e)
+            pprint(item)
         self.conn.commit()
 
     def unite_sql_room(self,item):
