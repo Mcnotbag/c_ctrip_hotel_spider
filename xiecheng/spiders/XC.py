@@ -40,26 +40,7 @@ def process_urltime():
     return now, tomorrw
 # 获取所有城市编号
 def allcity():
-    # if city_list == []:
-    #     city_headers = {
-    #         'Referer': 'http://hotels.ctrip.com/hotel',
-    #         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"
-    #     }
-    #     city_response = requests.get("http://hotels.ctrip.com/Domestic/Tool/AjaxGetCitySuggestion.aspx", headers=city_headers)
-    #     ret = re.findall(r'data:"(.*?)"', city_response.content.decode())
-    #     ret = set(ret)
-    #
-    #     for i in ret:
-    #         ret2 = i.split("|")
-    #         ret2.pop(1)
-    #         city_list.append(ret2)
-    #     city = city_list[0]
-    #     del city_list[0]
-    #
-    # else:
-    #     city = city_list[0]
-    #     del city_list[0]
-    #     "[zhengzhou,10]"
+
     city = []
     try:
         city = redis_server.blpop("city")
@@ -279,7 +260,7 @@ class XcSpider(RedisSpider):
             print("发生错误切换城市-下一城市%s" % cur_city)
             print("*"*50)
             # 如果发生错误 把当前城市重新放入redis中
-            redis_server.lpush("city",self.temp_city)
+            redis_server.rpush("city",self.temp_city)
             print("看cur_city是不是为空")
             print("cityid---%s"%city_id)
             print("citypy----%s"%city_py)
