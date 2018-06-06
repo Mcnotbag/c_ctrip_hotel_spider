@@ -5,6 +5,7 @@ import re
 from copy import deepcopy
 from pprint import pprint
 from time import sleep
+from urllib import parse
 from urllib.parse import to_bytes
 
 import requests
@@ -115,8 +116,14 @@ class XcSpider(RedisSpider):
         try:
             html_json = json.loads(html_str)
         except Exception as e:
-            print(e)
+            # print(e)
             html_str = re.sub(r'\w+\\\w+', self.sub_str, html_str)
+        try:
+            html_json = json.loads(html_str)
+        except Exception as e:
+            # print(e)
+
+            html_str = parse.unquote(parse.quote(html_str).replace('%20%08',''))
         try:
             html_json = json.loads(html_str)
         except Exception as e:

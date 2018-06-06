@@ -116,9 +116,9 @@ class XiechengPipeline(object):
         #     # insert Price表数据
         #     self.insert_price(item)
         #方案二
-        self.insert_hotel(item)
-        self.insert_room(item)
-        self.insert_price(item)
+        self.unite_sql_hotel(item)
+        self.unite_sql_room(item)
+        self.unite_sql_price(item)
         for image in item["Roomtype"]["Rimage"]:
             self.insert_image(item,image)
         return item
@@ -314,5 +314,53 @@ class XiechengPipeline(object):
             # self.conn.rollback()
 
 
+    def unite_sql_hotel(self,item):
+
+        sql = "if exists(select top 1 * from HotelSpider.dbo.Hotel where HId = '%s')" %str(item["HId"]) + \
+              " begin update Hotel set Score='%f',Price='%.2f',Phone='%s',ZXDate='%s',RoomCount='%s',UpdateTime='%s' where HId='%s' end" %(
+            float(str(item["Score"])),float(item["index_price"]),str(item["Phone"]),str(item["ZXdate"]),str(item["Roomtotal"]),str(datetime.datetime.now())[:23],str(item["HId"])
+        ) + \
+              " else begin INSERT INTO Hotel (Source, HId, City, Name, Cover, [Level], Score, Address, Price, Phone, KYDate," \
+                 + "RoomCount, ZXDate, Latitude, Longitude, Url, Description) values ('%d','%s','%s','%s','%s','%s','%f','%s','%.2f','%s','%s','%s','%s','%f','%f','%s','%s') end" %(
+            int((item["Source"])),item["HId"],str(item["City"]),str(item["Name"]),str(item["Cover"]),str(item["Star"]),float(item["Score"]),str(item["Address"]),float(item["index_price"]),str(item["Phone"]),str(item["KYdate"]),\
+            str(item["Roomtotal"]),str(item["ZXdate"]),float(item["Latitude"]),float(item["Longitude"]),str(item["HUrl"]),str(item["Description"]))
+
+        try:
+            self.cur.execute(sql)
+            # print("执行成功hotel")
+        except Exception as e:
+            print("执行失败hotel")
+            print(e)
+        self.conn.commit()
+
+    def unite_sql_room(self,item):
+        sql = "if exists(select top 1 * from HotelSpider.dbo.Room where RId = '%s')" % str(item["Roomtype"]["RId"]) + \
+              " begin update Room set Cover='%s',Name='%s',Price='%.2f',UpdateTime='%s' where RId='%s' end" %(str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),
+                                                                                                              str(datetime.datetime.now())[:23],str(item["Roomtype"]["RId"]))+ \
+              " else begin INSERT INTO Room (Source, HId, RId, Cover, Name, Floor, Area, Price, People, Bed) VALUES ('%d','%s','%s','%s','%s','%s','%s','%.2f','%d','%s') end" %(
+            int((item["Source"])),str(item["HId"]),str(item["Roomtype"]["RId"]),str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),
+            str(item["Roomtype"]["Rfloor"]),str(item["Roomtype"]["Rarea"]),float(item["Roomtype"]["room"]["price"]),int(item["Roomtype"]["room"]["people"]),str(item["Roomtype"]["Rbed"])
+        )
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            print("执行失败room")
+            print(e)
+        self.conn.commit()
+
+    def unite_sql_price(self,item):
+        sql = "if exists(select top 1 * from HotelSpider.dbo.Price where PId = '%s')" %str(item["Roomtype"]["room"]["PId"]) + \
+              " begin update Price set Name='%s',Price='%.2f',UpdateTime='%s' where PId='%s' end" %(str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),
+                                                                                                    str(datetime.datetime.now())[:23],str(item["Roomtype"]["room"]["PId"]))+ \
+              " else begin INSERT INTO Price (Source, HId, RId, PId, Name, Meal, Price) VALUES ('%d','%s','%s','%s','%s','%s','%.2f') end" %(
+            int((item["Source"])),str(item["HId"]),str(item["Roomtype"]["RId"]),str(item["Roomtype"]["room"]["PId"]),str(item["Roomtype"]["Rtitle"]),str(item["Roomtype"]["room"]["breakfast"]), float(item["Roomtype"]["room"]["price"])
+        )
+
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            print("执行失败price")
+            print(e)
+        self.conn.commit()
 
 
