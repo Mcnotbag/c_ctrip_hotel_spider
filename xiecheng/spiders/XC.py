@@ -98,7 +98,7 @@ class XcSpider(RedisSpider):
             html_json = json.loads(html_str)
         except Exception as e:
             # print(e)
-            html_str = re.sub(r'\w+\\\w+', self.sub_str, html_str)
+            html_str = re.sub(r'\w+\\[\w‘]+', self.sub_str, html_str)
         try:
             html_json = json.loads(html_str)
         except Exception as e:
