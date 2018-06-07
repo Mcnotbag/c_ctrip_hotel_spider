@@ -53,8 +53,8 @@ class XiechengPipeline(object):
         item["Roomtotal"] = item["Roomtotal"][0] if item["Roomtotal"] != [] else ''
 
         # 清洗经纬度
-        item["Latitude"] = item["street"].split("|")[1] if item["street"] != '' else []
-        item["Longitude"] = item["street"].split("|")[0] if item["street"] != '' else []
+        item["Latitude"] = item["street"].split("|")[1] if item["street"] != '' else 0
+        item["Longitude"] = item["street"].split("|")[0] if item["street"] != '' else 0
         # 清洗酒店介绍
         item["Description"] = item["Description"][0].replace("<br>","").replace("\u3000","").replace("'",'') if item["Description"] != [] else []
 

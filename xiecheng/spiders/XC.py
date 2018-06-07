@@ -171,7 +171,7 @@ class XcSpider(RedisSpider):
                 }
                 response_phone = requests.post(self.phone_url.format(item["HId"]),headers=headers2)
                 "0755-00000000 传，18500000000,0755-00000000 / 18500000000"
-                item["Phone"] = re.findall(r'<span id="J_realContact" data-real="电话([0-9\-\\/ ]{27}|[0-9\-]{13}|[0-9\-]{11}|[0-9\-]{12}|[0-9]{10})',response_phone.content.decode())
+                item["Phone"] = re.findall(r'<span id="J_realContact" data-real="电话([0-9\-\\/ ]{27}|[0-9\-]{19}|[0-9\-]{13}|[0-9\-]{12}|[0-9\-]{11}|[0-9]{10})',response_phone.content.decode())
                 item["KYdate"] = re.findall(r'(\d+)年开业',response_phone.content.decode())
                 item["ZXdate"] = re.findall(r";([0-9]+)年装修",response_phone.content.decode())
                 item["Description"] = re.findall(r'itemprop="description">(.*?)</span>',response_phone.content.decode())
@@ -318,7 +318,12 @@ class XcSpider(RedisSpider):
                     item["Roomtype"]["Rfloor"] = tr.xpath(".//div[@class='hrd-info-base']/ul/li[2]/text()")
                     item["RoomFacility"] = tr.xpath(".//ul[@class='hrd-allfac-list']/li/text()")
                     tr2_list = detail_html.xpath("//tr[@brid='{}']".format(item["Roomtype"]["RId"]))
-                    item["Roomtype"]["Rcover"] = re.findall(r'{"RoomUrl":"(.*?)","RoomID":%s'%int(item["Roomtype"]["RId"]),detail_response)
+                    #    测试改动
+                    try:
+                        item["Roomtype"]["Rcover"] = re.findall(r'{"RoomUrl":"(.*?)","RoomID":%s'%int(item["Roomtype"]["RId"]),detail_response)
+                    except Exception as e:
+                        print(e)
+                        print(item["Roomtype"]["RId"])
                     item["Roomtype"]["Rcover"] = item["Roomtype"]["Rcover"][0] if item["Roomtype"]["Rcover"] != [] else ''
 
                     for tr2 in tr2_list:
