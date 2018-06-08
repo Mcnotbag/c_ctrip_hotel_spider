@@ -319,6 +319,7 @@ class XcSpider(RedisSpider):
                     item["RoomFacility"] = tr.xpath(".//ul[@class='hrd-allfac-list']/li/text()")
                     tr2_list = detail_html.xpath("//tr[@brid='{}']".format(item["Roomtype"]["RId"]))
                     #    测试改动
+                    item["Roomtype"]["Rcover"] = None
                     try:
                         item["Roomtype"]["Rcover"] = re.findall(r'{"RoomUrl":"(.*?)","RoomID":%s'%int(item["Roomtype"]["RId"]),detail_response)
                     except Exception as e:
