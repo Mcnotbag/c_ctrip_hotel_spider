@@ -11,7 +11,7 @@ import pymssql
 
 class XiechengPipeline(object):
     def __init__(self):
-        self.conn = pymssql.connect(host='111.230.108.124:10433', user='user_spider', password='spider911#', database='HotelSpider')
+        self.conn = pymssql.connect(host='119.145.8.187:16433', user='sa', password='Ecaim6688.', database='HotelSpider')
         self.cur = self.conn.cursor()
     def close_spider(self,spider):
         self.cur.close()
@@ -119,8 +119,8 @@ class XiechengPipeline(object):
         self.unite_sql_hotel(item)
         self.unite_sql_room(item)
         self.unite_sql_price(item)
-        for image in item["Roomtype"]["Rimage"]:
-            self.insert_image(item,image)
+        # for image in item["Roomtype"]["Rimage"]:
+        self.insert_image(item)
         return item
 
     # 插入数据库
@@ -140,22 +140,25 @@ class XiechengPipeline(object):
             # print("插入失败Hotel")
             self.update_hotel(item)
 
-    def insert_image(self,item,image):
+    def insert_image(self,item):
         # if len(item["Roomtype"]["Rimage"]) > 1:
         #     image_str = ';'.join(item["Roomtype"]["Rimage"])
         # else:
         #     image_str = item["Roomtype"]["Rimage"][0] if item["Roomtype"]["Rimage"] != [] else ''
-        insert = "INSERT INTO Image (HId, RId, Url) VALUES ('%s','%s','%s')" % (str(item["HId"]), str(item["Roomtype"]["RId"]),str(image))
+        if item["Roomtype"]["Rimage"]:
+            insert = "INSERT INTO Image (HId, RId, Url) VALUES ('%s','%s','%s')"
 
-
-        try:
-            self.cur.execute(insert)
-            # print("插入成功Image")
-        except Exception as e:
-            # print(e)
-            # print("插入失败Image")
-            pass
-        self.conn.commit()
+            for image in item["Roomtype"]["Rimage"]:
+                insert = insert + "('%s','%s','%s')" % (str(item["HId"]), str(item["Roomtype"]["RId"]),str(image))
+            insert = insert.replace(')(','),(')
+            try:
+                self.cur.execute(insert)
+                # print("插入成功Image")
+            except Exception as e:
+                # print(e)
+                # print("插入失败Image")
+                pass
+            self.conn.commit()
 
     def insert_room(self,item):
         # float(min(item["Roomtype"]["type"]["price"]))
