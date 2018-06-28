@@ -1,6 +1,8 @@
 import json
 
 import re
+import uuid
+
 from lxml import etree
 
 import requests
@@ -28,25 +30,35 @@ import requests
 #
 # c = ["2018"][0]
 # print(c)
-from redis import Redis
-# # # # #
+# from redis import Redis
+# # # # # #
 # redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
-# # # # #
+# # # # # #
 # city_headers = {
 #     'Referer': 'http://hotels.ctrip.com/hotel',
 #     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"
 # }
-# city_response = requests.get("http://hotels.ctrip.com/Domestic/Tool/AjaxGetCitySuggestion.aspx", headers=city_headers)
-# # ret = re.findall(r'data:"(.*?)"', city_response.content.decode())
-# # ret = set(ret)
-# ret_hot = re.findall(r'suggestion={热门:\[(.*?)\],AB',city_response.content.decode())[0]
-# ret_hot = re.findall(r'data:"(.*?)",',ret_hot)
-
-# for i in ret_hot:
-#     i.replace("/",'')
-#     ret2 = i.split("|")
-#     ret2.pop(1)
-#     redis_server.rpush("city",ret2)
+# # city_response = requests.get("http://hotels.ctrip.com/Domestic/Tool/AjaxGetCitySuggestion.aspx", headers=city_headers)
+# # # ret = re.findall(r'data:"(.*?)"', city_response.content.decode())
+# # # ret = set(ret)
+# # ret_hot = re.findall(r'suggestion={热门:\[(.*?)\],AB',city_response.content.decode())[0]
+# # ret_hot = re.findall(r'data:"(.*?)",',ret_hot)
+# #
+# # for i in ret_hot:
+# #     i.replace("/",'')
+# #     ret2 = i.split("|")
+# #     ret2.pop(1)
+# #     print(ret2)
+#     # redis_server.rpush("city",ret2)
+# data = {
+#     "city":"32",
+#     "markType":"4",
+#     "newversion":"T"
+# }
+# response_location = requests.post("http://hotels.ctrip.com/Domestic/Tool/AjaxShowMoreDiv.aspx",headers=city_headers,data=data)
+# HTML_location = etree.HTML(response_location.content.decode())
+# scenis = HTML_location.xpath(".//div[@title]/text()")
+# print(scenis)
 # #
 # for i in range(100):
 #     city = redis_server.blpop("city2")
@@ -83,3 +95,12 @@ from redis import Redis
 # print(city)
 
 
+# l = "Coast派赛菲特床上用品、Sealy丝涟床垫以及L'Occitane欧舒丹沐浴用品，确保客人获得尊贵舒适的入住体验。酒店的钻石宴会厅面积达1200平方米，可同时容纳90桌宴席；此外，480平方米的红宝石宴会厅及4个多功能会议厅可满足多种形式的会议宴会。酒店还拥有在上海市区酒店内的婚礼教堂、5000平方米的非SPA中心和以声光影像科技讲述上海美食历史的非SPA–食光隧道、4家餐厅、酒吧，还有适合孩子玩耍的儿童乐园；是你闹中取静，带着家人度假休闲的理想之所。"
+# l = l.replace("'",'')
+# print(l)
+
+
+# import hashlib
+#
+# jiami = hashlib.md5("123".encode("utf-8")).hexdigest()[8:-8]
+# print(jiami)

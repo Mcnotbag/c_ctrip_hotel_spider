@@ -7,7 +7,7 @@ from redis import Redis
 
 class City(object):
     def __init__(self):
-        self.conn = pymssql.connect(host='192.168.2.135\sql2008', user='sa', password='sa', database='HotelSpider')
+        self.conn = pymssql.connect(host='119.145.8.188:16433', user='sa', password='Ecaim6688', database='HotelSpider')
         self.cur = self.conn.cursor()
         self.redis_server = Redis(host="111.230.34.217", port=6379, decode_responses=True)
 
@@ -53,7 +53,7 @@ class City(object):
                 city[0] = city[0].replace("'",'')
             if " " in city[0]:
                 city[0] = city[0].replace(" ",'')
-            insert = "insert into City(Source, CId, Name, Hot, Status, Zname) values ('%d', '%s', '%s', '%d', '%d','%s')" %(int(1),str(city[2]),str(city[0]),0,0,str(city[1]))
+            insert = "insert into City(Source, CId, Name, Hot, Status) values ('%d', '%s', '%s', '%d', '%d')" %(int(1),str(city[2]),str(city[0]),0,0)
             try:
                 self.cur.execute(insert)
                 # print("插入城市成功-%s" %city[0])
@@ -73,8 +73,8 @@ class City(object):
     def run(self):
         ret_hot,ret = self.reqeust_city()
         # self.insert_city_hot(ret_hot)
-        # self.insert_city_all(ret)
-        print(ret_hot)
+        self.insert_city_all(ret)
+        # print(ret_hot)
 
 
 

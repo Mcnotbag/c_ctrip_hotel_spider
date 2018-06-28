@@ -170,12 +170,34 @@ class XcSpider(RedisSpider):
                     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36"
                 }
                 response_phone = requests.post(self.phone_url.format(item["HId"]),headers=headers2)
+                response_phone_html = etree.HTML(response_phone.content.decode())
                 "0755-00000000 传，18500000000,0755-00000000 / 18500000000"
                 item["Phone"] = re.findall(r'<span id="J_realContact" data-real="电话([0-9\-\\/ ]{27}|[0-9\-]{19}|[0-9\-]{18}|[0-9\-]{13}|[0-9\-]{12}|[0-9\-]{11}|[0-9]{10})',response_phone.content.decode())
                 item["KYdate"] = re.findall(r'(\d+)年开业',response_phone.content.decode())
                 item["ZXdate"] = re.findall(r";([0-9]+)年装修",response_phone.content.decode())
                 item["Description"] = re.findall(r'itemprop="description">(.*?)</span>',response_phone.content.decode())
                 item["Roomtotal"] = re.findall(r";([0-9]+)间房",response_phone.content.decode())
+                item["business"] = re.findall(r'class="detail_add_area" .*?>(.*?)</a>',response_phone.content.decode())
+                # 获取酒店设施
+                item["Hfacility"] = []
+                tr1_list = response_phone_html.xpath("//div[@id='J_htl_facilities']//tr")
+                for tr1 in tr1_list[:-1]:
+                    tr_dict = dict()
+                    title1 = tr1.xpath("./th/text()")[0]
+                    facility1 = tr1.xpath("./td/ul/li/@title")
+                    tr_dict[title1] = facility1
+                    item["Hfacility"].append(tr_dict)
+                # 获取周边设施
+                item["Ofacility"] = []
+                tr2_list = response_phone_html.xpath("//h2[@class='detail_title' and text()='周边设施']/following-sibling::div[1]//tr")
+                for tr2 in tr2_list:
+                    tr_dict = dict()
+                    title2 = tr2.xpath('./th/text()')[0]
+                    facility2 = tr2.xpath('./td/ul/li/text()')
+                    if not facility2:
+                        continue
+                    tr_dict[title2] = facility2
+                    item["Ofacility"].append(tr_dict)
 
                 yield scrapy.Request(
                     self.detail_urls.format(int(item["HId"]), int(item["HId"]), self.nowdate, self.tomorrwdate),
@@ -334,8 +356,9 @@ class XcSpider(RedisSpider):
                         item["Roomtype"]["room"]["PId"] = tr2.xpath("./@guid")
                         item["Roomtype"]["room"]["price"] = tr2.xpath(".//span[@class='base_price']/text()")
                         item["Roomtype"]["room"]["people"] = tr.xpath(".//td[@class='col_person']/span/@title")
-                        # print(item)
-                        # print(item["Roomtype"]["Rcover"])
+                        # print(item["HId"])
+                        # print(item["Hfacility"])
+                        # print(item["Ofacility"])
                         yield deepcopy(item)
 
 

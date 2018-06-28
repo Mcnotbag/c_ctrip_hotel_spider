@@ -5,13 +5,14 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import datetime
+import hashlib
 import time
 from pprint import pprint
 import pymssql
 
 class XiechengPipeline(object):
     def __init__(self):
-        self.conn = pymssql.connect(host='119.145.8.187:16433', user='sa', password='Ecaim6688.', database='HotelSpider')
+        self.conn = pymssql.connect(host='119.145.8.188:16433', user='sa', password='Ecaim6688', database='HotelSpider')
         self.cur = self.conn.cursor()
     def close_spider(self,spider):
         self.cur.close()
@@ -75,7 +76,13 @@ class XiechengPipeline(object):
         #清洗评分
         item["Score"] = str(item["Score"]).replace("\t",'').replace(' ','')
 
-
+        # 清洗商业圈
+        item["business"] = ','.join(item["business"])
+        #清洗区域 area
+        try:
+            item["Area"] = item["Address"].split("区",maxsplit=1)[0] + "区"
+        except:
+            item["Area"] = ''
         # 插入数据库
         """cursor.executemany(
             "INSERT INTO persons VALUES (%d, %s, %s)",
@@ -121,6 +128,8 @@ class XiechengPipeline(object):
         self.unite_sql_price(item)
         # for image in item["Roomtype"]["Rimage"]:
         self.insert_image(item)
+        self.insert_Hfacility(item)
+        self.insert_Ofacility(item)
         return item
 
     # 插入数据库
@@ -320,13 +329,13 @@ class XiechengPipeline(object):
     def unite_sql_hotel(self,item):
 
         sql = "if exists(select top 1 * from HotelSpider.dbo.Hotel where HId = '%s')" %str(item["HId"]) + \
-              " begin update Hotel set Score='%f',Price='%.2f',Phone='%s',ZXDate='%s',RoomCount='%s',UpdateTime='%s' where HId='%s' end" %(
-            float(str(item["Score"])),float(item["index_price"]),str(item["Phone"]),str(item["ZXdate"]),str(item["Roomtotal"]),str(datetime.datetime.now())[:23],str(item["HId"])
+              " begin update Hotel set Score='%f',Price='%.2f',Phone='%s',ZXDate='%s',RoomCount='%s',UpdateTime='%s',area='%s',business='%s' where HId='%s' end" %(
+            float(str(item["Score"])),float(item["index_price"]),str(item["Phone"]),str(item["ZXdate"]),str(item["Roomtotal"]),str(datetime.datetime.now())[:23],str(item["Area"]),str(item["business"]),str(item["HId"])
         ) + \
               " else begin INSERT INTO Hotel (Source, HId, City, Name, Cover, [Level], Score, Address, Price, Phone, KYDate," \
-                 + "RoomCount, ZXDate, Latitude, Longitude, Url, Description) values ('%d','%s','%s','%s','%s','%s','%f','%s','%.2f','%s','%s','%s','%s','%f','%f','%s','%s') end" %(
+                 + "RoomCount, ZXDate, Latitude, Longitude, Url, Description, area, business) values ('%d','%s','%s','%s','%s','%s','%f','%s','%.2f','%s','%s','%s','%s','%f','%f','%s','%s','%s','%s') end" %(
             int((item["Source"])),item["HId"],str(item["City"]),str(item["Name"]),str(item["Cover"]),str(item["Star"]),float(item["Score"]),str(item["Address"]),float(item["index_price"]),str(item["Phone"]),str(item["KYdate"]),\
-            str(item["Roomtotal"]),str(item["ZXdate"]),float(item["Latitude"]),float(item["Longitude"]),str(item["HUrl"]),str(item["Description"]))
+            str(item["Roomtotal"]),str(item["ZXdate"]),float(item["Latitude"]),float(item["Longitude"]),str(item["HUrl"]),str(item["Description"]),str(item["Area"]),str(item["business"]))
 
         try:
             self.cur.execute(sql)
@@ -368,3 +377,37 @@ class XiechengPipeline(object):
         self.conn.commit()
 
 
+    def insert_Hfacility(self,item):
+        if item["Hfacility"]:
+            sql = "INSERT INTO HotelFacility (FID,HId,FirstName,SecondName) VALUES "
+            for Hfacility in item["Hfacility"]:
+                first_name = list(Hfacility.keys())[0]
+                seconds = Hfacility[first_name]
+                for second in seconds:
+                    str_data = hashlib.md5((str(item["HId"])+str(first_name)+str(second)).encode("utf-8")).hexdigest()
+                    sql = sql + "('%s','%s','%s','%s')" %(str_data,item["HId"],first_name,second)
+
+            sql = sql.replace(')(','),(')
+
+            try:
+                self.cur.execute(sql)
+            except Exception as e:
+                pass
+            self.conn.commit()
+
+    def insert_Ofacility(self,item):
+        if item["Ofacility"]:
+            sql = "INSERT INTO OtherFacility (OId,HId,FirstName,SecondName) VALUES "
+            for Ofacility in item["Ofacility"]:
+                first_name = list(Ofacility.keys())[0]
+                seconds = Ofacility[first_name]
+                for second in seconds:
+                    str_data = hashlib.md5((str(item["HId"])+str(first_name)+str(second)).encode("utf-8")).hexdigest()
+                    sql = sql + "('%s','%s','%s','%s')" % (str_data, item["HId"], first_name, second)
+            sql = sql.replace(')(', '),(')
+
+            try:
+                self.cur.execute(sql)
+            except Exception as e:
+                pass
+            self.conn.commit()
