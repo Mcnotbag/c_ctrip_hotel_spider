@@ -19,118 +19,89 @@ class XiechengPipeline(object):
         self.conn.close()
 
     def process_item(self, item, spider):
-        item["Roomtype"]["Rarea"] = item["Roomtype"]["Rarea"][1] if item["Roomtype"]["Rarea"] != [] else []
-        # 清洗设施
-        item["RoomFacility"] = [i.replace(" ","").replace("\n","") for i in item["RoomFacility"]] if item["RoomFacility"] != [] else []
-        while '' in item["RoomFacility"]:
-            item["RoomFacility"].remove('')
-        item["RoomFacility"] = [str(i) for i in item["RoomFacility"]]
-        item["RoomFacility"] = ''.join(item["RoomFacility"])
+        if spider.name == 'XC':
+            item["Roomtype"]["Rarea"] = item["Roomtype"]["Rarea"][1] if item["Roomtype"]["Rarea"] != [] else []
+            # 清洗设施
+            item["RoomFacility"] = [i.replace(" ","").replace("\n","") for i in item["RoomFacility"]] if item["RoomFacility"] != [] else []
+            while '' in item["RoomFacility"]:
+                item["RoomFacility"].remove('')
+            item["RoomFacility"] = [str(i) for i in item["RoomFacility"]]
+            item["RoomFacility"] = ''.join(item["RoomFacility"])
 
-        # 清洗bed
-        item["Roomtype"]["Rbed"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rbed"]][1] if item["Roomtype"]["Rbed"] != [] else []
-        # 清洗Rfloor
-        item["Roomtype"]["Rfloor"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rfloor"]][1] if item["Roomtype"]["Rfloor"] != [] else []
-        # 清洗Rtitle
-        # item["Roomtype"]["Rtitle"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rtitle"]][0].replace("\t","") if item["Roomtype"]["Rtitle"] != [] else []
+            # 清洗bed
+            item["Roomtype"]["Rbed"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rbed"]][1] if item["Roomtype"]["Rbed"] != [] else []
+            # 清洗Rfloor
+            item["Roomtype"]["Rfloor"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rfloor"]][1] if item["Roomtype"]["Rfloor"] != [] else []
+            # 清洗Rtitle
+            # item["Roomtype"]["Rtitle"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rtitle"]][0].replace("\t","") if item["Roomtype"]["Rtitle"] != [] else []
 
-        # 清洗RId
-        # item["Roomtype"]["RId"] = item["Roomtype"]["RId"][0].replace("rdn","") if item["Roomtype"]["RId"] != [] else []
+            # 清洗RId
+            # item["Roomtype"]["RId"] = item["Roomtype"]["RId"][0].replace("rdn","") if item["Roomtype"]["RId"] != [] else []
 
-        #清洗电话
-        if item["Phone"]:
-            item["Phone"] = item["Phone"][0].split(" / ") if "/" in item["Phone"][0] else item["Phone"][0]
-            if ',' in str(item["Phone"]):
-                phone_list = eval(str(item["Phone"]))
-                item["Phone"] = ';'.join(phone_list)
-            if '/' in str(item["Phone"]):
-                phone_list = eval(str(item["Phone"]))
-                item["Phone"] = ';'.join(phone_list)
-        # 清洗开业时间
-        item["KYdate"] = item["KYdate"][0] if item["KYdate"] != [] else []
-        item["ZXdate"] = item["ZXdate"][0] if item["ZXdate"] != [] else ''
+            #清洗电话
+            if item["Phone"]:
+                item["Phone"] = item["Phone"][0].split(" / ") if "/" in item["Phone"][0] else item["Phone"][0]
+                if ',' in str(item["Phone"]):
+                    phone_list = eval(str(item["Phone"]))
+                    item["Phone"] = ';'.join(phone_list)
+                if '/' in str(item["Phone"]):
+                    phone_list = eval(str(item["Phone"]))
+                    item["Phone"] = ';'.join(phone_list)
+            # 清洗开业时间
+            item["KYdate"] = item["KYdate"][0] if item["KYdate"] != [] else []
+            item["ZXdate"] = item["ZXdate"][0] if item["ZXdate"] != [] else ''
 
-        # 清洗房间总数
-        item["Roomtotal"] = item["Roomtotal"][0] if item["Roomtotal"] != [] else ''
+            # 清洗房间总数
+            item["Roomtotal"] = item["Roomtotal"][0] if item["Roomtotal"] != [] else ''
 
-        # 清洗经纬度
-        item["Latitude"] = item["street"].split("|")[1] if item["street"] != '' else 0
-        item["Longitude"] = item["street"].split("|")[0] if item["street"] != '' else 0
-        # 清洗酒店介绍
-        item["Description"] = item["Description"][0].replace("<br>","").replace("\u3000","").replace("'",'') if item["Description"] != [] else []
+            # 清洗经纬度
+            item["Latitude"] = item["street"].split("|")[1] if item["street"] != '' else 0
+            item["Longitude"] = item["street"].split("|")[0] if item["street"] != '' else 0
+            # 清洗酒店介绍
+            item["Description"] = item["Description"][0].replace("<br>","").replace("\u3000","").replace("'",'') if item["Description"] != [] else []
 
-        # 清洗有无早餐
-        item["Roomtype"]["room"]["breakfast"] = item["Roomtype"]["room"]["breakfast"][0] if item["Roomtype"]["room"]["breakfast"] != [] else "有早"
+            # 清洗有无早餐
+            item["Roomtype"]["room"]["breakfast"] = item["Roomtype"]["room"]["breakfast"][0] if item["Roomtype"]["room"]["breakfast"] != [] else "有早"
 
-        # 清洗PId
-        item["Roomtype"]["room"]["PId"] = item["Roomtype"]["room"]["PId"][0] if item["Roomtype"]["room"]["PId"] != [] else []
+            # 清洗PId
+            item["Roomtype"]["room"]["PId"] = item["Roomtype"]["room"]["PId"][0] if item["Roomtype"]["room"]["PId"] != [] else []
 
-        # 清洗price
-        item["Roomtype"]["room"]["price"] = item["Roomtype"]["room"]["price"][0] if item["Roomtype"]["room"]["price"] != [] else 0
-        item["Roomtype"]["room"]["price"] = str(item["Roomtype"]["room"]["price"]).replace("\t",'').replace(' ','')
-        item["index_price"] = str(item["index_price"]).replace("\t",'').replace(' ','')
+            # 清洗price
+            item["Roomtype"]["room"]["price"] = item["Roomtype"]["room"]["price"][0] if item["Roomtype"]["room"]["price"] != [] else 0
+            item["Roomtype"]["room"]["price"] = str(item["Roomtype"]["room"]["price"]).replace("\t",'').replace(' ','')
+            item["index_price"] = str(item["index_price"]).replace("\t",'').replace(' ','')
 
-        #清洗people
-        item["Roomtype"]["room"]["people"] = item["Roomtype"]["room"]["people"][7] if len(item["Roomtype"]["room"]["people"]) == 8 else 2
+            #清洗people
+            item["Roomtype"]["room"]["people"] = item["Roomtype"]["room"]["people"][7] if len(item["Roomtype"]["room"]["people"]) == 8 else 2
 
-        #清洗评分
-        item["Score"] = str(item["Score"]).replace("\t",'').replace(' ','')
+            #清洗评分
+            item["Score"] = str(item["Score"]).replace("\t",'').replace(' ','')
 
-        # 清洗商业圈
-        item["business"] = ','.join(item["business"])
-        #清洗区域 area
-        try:
-            item["Area"] = item["Address"].split("区",maxsplit=1)[0] + "区"
-        except:
-            item["Area"] = ''
-        # 插入数据库
-        """cursor.executemany(
-            "INSERT INTO persons VALUES (%d, %s, %s)",
-            [(1, 'John Smith', 'John Doe'),
-             (2, 'Jane Doe', 'Joe Dog'),
-             (3, 'Mike T.', 'Sarah H.')])"""
-        """conn.execute_non_query("INSERT INTO persons VALUES(1, 'John Doe')")"""
+            # 清洗商业圈
+            item["business"] = ','.join(item["business"])
+            #清洗区域 area
+            try:
+                item["Area"] = item["Address"].split("区",maxsplit=1)[0] + "区"
+            except:
+                item["Area"] = ''
+            # 插入数据库
+            """cursor.executemany(
+                "INSERT INTO persons VALUES (%d, %s, %s)",
+                [(1, 'John Smith', 'John Doe'),
+                 (2, 'Jane Doe', 'Joe Dog'),
+                 (3, 'Mike T.', 'Sarah H.')])"""
+            """conn.execute_non_query("INSERT INTO persons VALUES(1, 'John Doe')")"""
 
-        # 方案一
-        # # 逻辑先判断有没有这个数据,有的话更新，没有插入
-        # hotel_ret = self.select_hotel(item["HId"])
-        # if hotel_ret:
-        #     # update Hotel表
-        #     self.update_hotel(item)
-        # else:
-        #     # insert Hotel表中的数据
-        #     self.insert_hotel(item)
-        # for image in item["Roomtype"]["Rimage"]:
-        #     # image_ret = self.select_image(item["Roomtype"]["RId"],image)
-        #     # if not image_ret:
-        #     #     # update image表
-        #     self.insert_image(item,image)
-        #     # else:
-        #     #     # insert Image表数据
-        #     #     self.insert_image(item,image)
-        # room_ret = self.select_room(item["Roomtype"]["RId"])
-        # if room_ret:
-        #     # update room表
-        #     self.update_room(item)
-        # else:
-        #     # insert Room表数据
-        #     self.insert_room(item)
-        # price_ret = self.select_price(str(item["Roomtype"]["room"]["PId"]))
-        # if price_ret:
-        #     # update price表
-        #     self.update_price(item)
-        # else:
-        #     # insert Price表数据
-        #     self.insert_price(item)
-        #方案二
-        self.unite_sql_hotel(item)
-        self.unite_sql_room(item)
-        self.unite_sql_price(item)
-        # for image in item["Roomtype"]["Rimage"]:
-        self.insert_image(item)
-        self.insert_Hfacility(item)
-        self.insert_Ofacility(item)
-        return item
+            self.unite_sql_hotel(item)
+            self.unite_sql_room(item)
+            self.unite_sql_price(item)
+            # for image in item["Roomtype"]["Rimage"]:
+            self.insert_image(item)
+            self.insert_Hfacility(item)
+            self.insert_Ofacility(item)
+            return item
+        elif spider.name == 'relation':
+            print(item)
 
     # 插入数据库
     def insert_hotel(self,item):
@@ -379,13 +350,13 @@ class XiechengPipeline(object):
 
     def insert_Hfacility(self,item):
         if item["Hfacility"]:
-            sql = "INSERT INTO HotelFacility (FID,HId,FirstName,SecondName) VALUES "
+            sql = "INSERT INTO HotelFacility (FID,HId,CId,FirstName,SecondName) VALUES "
             for Hfacility in item["Hfacility"]:
                 first_name = list(Hfacility.keys())[0]
                 seconds = Hfacility[first_name]
                 for second in seconds:
                     str_data = hashlib.md5((str(item["HId"])+str(first_name)+str(second)).encode("utf-8")).hexdigest()
-                    sql = sql + "('%s','%s','%s','%s')" %(str_data,item["HId"],first_name,second)
+                    sql = sql + "('%s','%s','%s','%s','%s')" %(str_data,item["HId"],item["City"],first_name,second)
 
             sql = sql.replace(')(','),(')
 
@@ -397,13 +368,13 @@ class XiechengPipeline(object):
 
     def insert_Ofacility(self,item):
         if item["Ofacility"]:
-            sql = "INSERT INTO OtherFacility (OId,HId,FirstName,SecondName) VALUES "
+            sql = "INSERT INTO OtherFacility (OId,HId,CId,FirstName,SecondName) VALUES "
             for Ofacility in item["Ofacility"]:
                 first_name = list(Ofacility.keys())[0]
                 seconds = Ofacility[first_name]
                 for second in seconds:
                     str_data = hashlib.md5((str(item["HId"])+str(first_name)+str(second)).encode("utf-8")).hexdigest()
-                    sql = sql + "('%s','%s','%s','%s')" % (str_data, item["HId"], first_name, second)
+                    sql = sql + "('%s','%s','%s','%s','%s')" % (str_data, item["HId"],item["City"],first_name, second)
             sql = sql.replace(')(', '),(')
 
             try:

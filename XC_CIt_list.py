@@ -53,7 +53,7 @@ class City(object):
                 city[0] = city[0].replace("'",'')
             if " " in city[0]:
                 city[0] = city[0].replace(" ",'')
-            insert = "insert into City(Source, CId, Name, Hot, Status) values ('%d', '%s', '%s', '%d', '%d')" %(int(1),str(city[2]),str(city[0]),0,0)
+            insert = "insert into City(Source, CId, CName,Name, Hot, Status) values ('%d', '%s','%s','%s', '%d', '%d')" %(int(1),str(city[2]),str(city[1]),str(city[0]),0,0)
             try:
                 self.cur.execute(insert)
                 # print("插入城市成功-%s" %city[0])

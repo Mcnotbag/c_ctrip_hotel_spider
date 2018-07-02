@@ -115,11 +115,25 @@ class Location_XC:
                 for line in line_list:
                     sub_station_li = HTML_location.xpath(".//div[@title='%s']/following-sibling::div/@title" % line)
                     # print(line)
+                    sub_station_va = HTML_location.xpath(".//div[@title='%s']/following-sibling::div/@data-value" % line)
                     # print(sub_station_li)
-                    self.insert_subway(cityid,line,sub_station_li)
+                    # print(sub_station_va)
+                    for i in sub_station_li:
+                        ind = sub_station_li.index(i)
+                        self.update_subway(cityid,i,sub_station_va[ind],line)
 
+                    # self.insert_subway(cityid,line,sub_station_li)
 
+    def update_subway(self,cityid,title,value,line):
+        str_date = (str(cityid) + str(line) + str(title)).encode("utf-8")
+        SId = hashlib.md5(str_date).hexdigest()
 
+        sql = "update Subway set Orders='%d' where SId='%s'" % (int(value),SId)
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            print(e)
+        self.conn.commit()
     def insert_subway(self,cityid,line,scenis_li):
         sql = "insert into Subway (SId,CId,SubwayLine,SubwayStation) values "
         for scenis in scenis_li:
