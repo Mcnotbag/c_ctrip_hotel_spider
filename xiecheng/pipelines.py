@@ -80,10 +80,7 @@ class XiechengPipeline(object):
             # 清洗商业圈
             item["business"] = ','.join(item["business"])
             #清洗区域 area
-            try:
-                item["Area"] = item["Address"].split("区",maxsplit=1)[0] + "区"
-            except:
-                item["Area"] = ''
+            item["Area"] = item["Area"][0] if item["Area"] != [] else ''
             # 插入数据库
             """cursor.executemany(
                 "INSERT INTO persons VALUES (%d, %s, %s)",

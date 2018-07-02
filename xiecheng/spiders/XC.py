@@ -178,6 +178,7 @@ class XcSpider(RedisSpider):
                 item["Description"] = re.findall(r'itemprop="description">(.*?)</span>',response_phone.content.decode())
                 item["Roomtotal"] = re.findall(r";([0-9]+)间房",response_phone.content.decode())
                 item["business"] = re.findall(r'class="detail_add_area" .*?>(.*?)</a>',response_phone.content.decode())
+                item["Area"] = response_phone_html.xpath(".//span[@id='ctl00_MainContentPlaceHolder_commonHead_lnkLocation']/text()")
                 # 获取酒店设施
                 item["Hfacility"] = []
                 tr1_list = response_phone_html.xpath("//div[@id='J_htl_facilities']//tr")
