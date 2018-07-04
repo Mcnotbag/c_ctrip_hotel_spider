@@ -61,6 +61,8 @@ class XcSpider(RedisSpider):
     detail_urls = "http://hotels.ctrip.com/Domestic/tool/AjaxHote1RoomListForDetai1.aspx?psid=&MasterHotelID={}&hotel={}&EDM=F&roomId=&IncludeRoom=&city=&showspothotel=T&supplier=&IsDecoupleSpotHotelAndGroup=F&contrast=0&brand=594&startDate={}&depDate={}&IsFlash=F&RequestTravelMoney=F&hsids=&IsJustConfirm=&contyped=0&priceInfo=-1&equip=&filter=&productcode=&couponList=&abForHuaZhu=&defaultLoad=T&TmFromList=F&RoomGuestCount=1,1,0&eleven=750b5f087458de3f433a67698ee9f870d8a163be315660fb089a3c31b4680d08&callback=CASpIrzFXZrVOhxTPOo&_=1526703447992"
     # 获取开业时间和电话url
     phone_url = "http://hotels.ctrip.com/hotel/{}.html?isFull=F"
+    # 所有图片url
+    pic_url = "http://hotels.ctrip.com/Domestic/tool/AjaxLoadPictureAlbum.aspx?hotel={HId}&city={CId}&istaiwan=0"
     City = allcity()
     temp_city = City
     page = 1
@@ -179,6 +181,7 @@ class XcSpider(RedisSpider):
                 item["Roomtotal"] = re.findall(r";([0-9]+)间房",response_phone.content.decode())
                 item["business"] = re.findall(r'class="detail_add_area" .*?>(.*?)</a>',response_phone.content.decode())
                 item["Area"] = response_phone_html.xpath(".//span[@id='ctl00_MainContentPlaceHolder_commonHead_lnkLocation']/text()")
+                item["Hlabel"] = response_phone_html.xpath(".//div[@class='hotel_info_comment detail_content']/div[@class='special_label']/i/text()")
                 # 获取酒店设施
                 item["Hfacility"] = []
                 tr1_list = response_phone_html.xpath("//div[@id='J_htl_facilities']//tr")
@@ -199,6 +202,14 @@ class XcSpider(RedisSpider):
                         continue
                     tr_dict[title2] = facility2
                     item["Ofacility"].append(tr_dict)
+                # 获取所有图片
+                cur_city = eval(self.City)
+                city_id = cur_city[1].replace("/", '')
+                pic_response = requests.get(self.pic_url.format(HId=item["HId"],CId=city_id),headers=headers2)
+                pic_html = etree.HTML(pic_response.content.decode())
+                item["pic_title"] = pic_html.xpath("//div[@id='J_OffiPicDiv']/div[@class='pic_right']/a/img/@alt")
+                item["pic_url"] = pic_html.xpath("//div[@id='J_OffiPicDiv']/div[@class='pic_right']/a/img/@data-bigpic")
+                item["pic_id"] = pic_html.xpath("//div[@id='J_OffiPicDiv']/div[@class='pic_right']/a/img/@pid")
 
                 yield scrapy.Request(
                     self.detail_urls.format(int(item["HId"]), int(item["HId"]), self.nowdate, self.tomorrwdate),
@@ -357,9 +368,8 @@ class XcSpider(RedisSpider):
                         item["Roomtype"]["room"]["PId"] = tr2.xpath("./@guid")
                         item["Roomtype"]["room"]["price"] = tr2.xpath(".//span[@class='base_price']/text()")
                         item["Roomtype"]["room"]["people"] = tr.xpath(".//td[@class='col_person']/span/@title")
-                        # print(item["HId"])
-                        # print(item["Hfacility"])
-                        # print(item["Ofacility"])
+                        # print(item["Hlabel"])
+
                         yield deepcopy(item)
 
 

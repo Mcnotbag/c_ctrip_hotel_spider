@@ -81,6 +81,8 @@ class XiechengPipeline(object):
             item["business"] = ','.join(item["business"])
             #清洗区域 area
             item["Area"] = item["Area"][0] if item["Area"] != [] else ''
+            # 清洗Hlabel
+            item["Hlabel"] = ','.join(item["Hlabel"])
             # 插入数据库
             """cursor.executemany(
                 "INSERT INTO persons VALUES (%d, %s, %s)",
@@ -96,6 +98,7 @@ class XiechengPipeline(object):
             self.insert_image(item)
             self.insert_Hfacility(item)
             self.insert_Ofacility(item)
+            self.insert_Allimage(item)
             return item
         elif spider.name == 'relation':
             print(item)
@@ -297,13 +300,13 @@ class XiechengPipeline(object):
     def unite_sql_hotel(self,item):
 
         sql = "if exists(select top 1 * from HotelSpider.dbo.Hotel where HId = '%s')" %str(item["HId"]) + \
-              " begin update Hotel set Score='%f',Price='%.2f',Phone='%s',ZXDate='%s',RoomCount='%s',UpdateTime='%s',area='%s',business='%s' where HId='%s' end" %(
-            float(str(item["Score"])),float(item["index_price"]),str(item["Phone"]),str(item["ZXdate"]),str(item["Roomtotal"]),str(datetime.datetime.now())[:23],str(item["Area"]),str(item["business"]),str(item["HId"])
+              " begin update Hotel set Score='%f',Price='%.2f',Phone='%s',ZXDate='%s',RoomCount='%s',UpdateTime='%s',area='%s',business='%s',label='%s' where HId='%s' end" %(
+            float(str(item["Score"])),float(item["index_price"]),str(item["Phone"]),str(item["ZXdate"]),str(item["Roomtotal"]),str(datetime.datetime.now())[:23],str(item["Area"]),str(item["business"]),str(item["Hlabel"]),str(item["HId"])
         ) + \
               " else begin INSERT INTO Hotel (Source, HId, City, Name, Cover, [Level], Score, Address, Price, Phone, KYDate," \
-                 + "RoomCount, ZXDate, Latitude, Longitude, Url, Description, area, business) values ('%d','%s','%s','%s','%s','%s','%f','%s','%.2f','%s','%s','%s','%s','%f','%f','%s','%s','%s','%s') end" %(
+                 + "RoomCount, ZXDate, Latitude, Longitude, Url, Description, area, business,label) values ('%d','%s','%s','%s','%s','%s','%f','%s','%.2f','%s','%s','%s','%s','%f','%f','%s','%s','%s','%s','%s') end" %(
             int((item["Source"])),item["HId"],str(item["City"]),str(item["Name"]),str(item["Cover"]),str(item["Star"]),float(item["Score"]),str(item["Address"]),float(item["index_price"]),str(item["Phone"]),str(item["KYdate"]),\
-            str(item["Roomtotal"]),str(item["ZXdate"]),float(item["Latitude"]),float(item["Longitude"]),str(item["HUrl"]),str(item["Description"]),str(item["Area"]),str(item["business"]))
+            str(item["Roomtotal"]),str(item["ZXdate"]),float(item["Latitude"]),float(item["Longitude"]),str(item["HUrl"]),str(item["Description"]),str(item["Area"]),str(item["business"]),str(item["Hlabel"]))
 
         try:
             self.cur.execute(sql)
@@ -379,3 +382,19 @@ class XiechengPipeline(object):
             except Exception as e:
                 pass
             self.conn.commit()
+
+    def insert_Allimage(self,item):
+        sql = "insert into AllImage (PId,HId,Title,Url) values "
+        for pid in item["pic_id"]:
+            ind = item["pic_id"].index(pid)
+            title = item["pic_title"][ind]
+            url = item["pic_url"][ind]
+            sql = sql + "('%s','%s','%s','%s')" %(str(pid),str(item["HId"]),str(title),str(url))
+        sql = sql.replace(')(', '),(')
+
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            # print(e)
+            pass
+        self.conn.commit()
