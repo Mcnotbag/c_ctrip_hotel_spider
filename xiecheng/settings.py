@@ -22,10 +22,10 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 
-DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
-SCHEDULER_QUEUE_CLASS = "scrapy_redis.scheduler.Scheduler"
-SCHEDULER_PERSIST = True
-REDIS_URL = "redis://111.230.34.217:6379"
+# DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+# SCHEDULER_QUEUE_CLASS = "scrapy_redis.scheduler.Scheduler"
+# SCHEDULER_PERSIST = True
+# REDIS_URL = "redis://111.230.34.217:6379"
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32

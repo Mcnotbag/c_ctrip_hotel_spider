@@ -33,7 +33,7 @@ from scrapy_redis.scheduler import Scheduler
 详情页：http://hotels.ctrip.com/Domestic/tool/AjaxHote1RoomListForDetai1.aspx?psid=&MasterHotelID=6461667&hotel=6461667&EDM=F&roomId=&IncludeRoom=&city=30&showspothotel=T&supplier=&IsDecoupleSpotHotelAndGroup=F&contrast=0&brand=594&startDate=2018-05-08&depDate=2018-05-09&IsFlash=F&RequestTravelMoney=F&hsids=&IsJustConfirm=&contyped=0&priceInfo=-1&equip=&filter=&productcode=&couponList=&abForHuaZhu=&defaultLoad=T&TmFromList=F&RoomGuestCount=1,1,0&eleven=57edcb55890ff7224025d0f76c03131f9a23079ddae2ae5c00fb75b9a0c23fc5&callback=CASqinzsxIZFTSRGrMk&_=1525749361046
        "http://hotels.ctrip.com/Domestic/tool/AjaxHote1RoomListForDetai1.aspx"
 """
-redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
+redis_server = Redis(host="119.145.8.188",port=6379,decode_responses=True)
 def process_urltime():
     now = datetime.date.today()
     tomorrw = now + datetime.timedelta(days=1)
@@ -203,9 +203,14 @@ class XcSpider(RedisSpider):
                     tr_dict[title2] = facility2
                     item["Ofacility"].append(tr_dict)
                 # 获取所有图片
+                headers3 = {
+                    "Referer":"http://hotels.ctrip.com/hotel/{}.html?isFull=F".format(item["HId"]),
+                    "Host":"hotels.ctrip.com",
+                    "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
+                }
                 cur_city = eval(self.City)
                 city_id = cur_city[1].replace("/", '')
-                pic_response = requests.get(self.pic_url.format(HId=item["HId"],CId=city_id),headers=headers2)
+                pic_response = requests.get(self.pic_url.format(HId=item["HId"],CId=city_id),headers=headers3,timeout=10)
                 pic_html = etree.HTML(pic_response.content.decode())
                 item["pic_title"] = pic_html.xpath("//div[@id='J_OffiPicDiv']/div[@class='pic_right']/a/img/@alt")
                 item["pic_url"] = pic_html.xpath("//div[@id='J_OffiPicDiv']/div[@class='pic_right']/a/img/@data-bigpic")
