@@ -7,11 +7,12 @@ import re
 import pymssql
 import threading
 from pprint import pprint
+from time import sleep
 
 from lxml import etree
 from redis import Redis
 import requests
-redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
+redis_server = Redis(host="119.145.8.188",port=6379,decode_responses=True)
 
 # # # # #
 city_headers = {
@@ -346,6 +347,116 @@ class Location_XC:
             print("插入失败station")
         self.conn.commit()
 
+    def elong_lacation(self,city):
+        city_PY = city[0].replace("'",'').replace(" ",'')
+        city_id = city[2]
+        city_kw = city[1]
+        url = "http://hotel.elong.com/{}/".format(city_PY)
+        headers = {
+            "Referer":"http://www.elong.com/",
+            "Host":"hotel.elong.com",
+            "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
+        }
+        response = requests.get(url,headers=headers)
+        html = etree.HTML(response.content.decode("utf-8"))
+        if "您访问的页面不存在或暂时无法访问" in response.content.decode():
+            redis_server.lpush("notcity",city)
+        hospital_type = html.xpath(".//li[text()='\n医院']/@data-typeid")[0] if html.xpath(".//li[text()='\n医院']/@data-typeid") != [] else None
+        school_type = html.xpath(".//li[text()='\n大学']/@data-typeid")[0] if html.xpath(".//li[text()='\n大学']/@data-typeid") != [] else None
+        station_type = html.xpath(".//li[text()='\n机场/车站']/@data-typeid")[0] if html.xpath(".//li[text()='\n机场/车站']/@data-typeid") != [] else None
+        stadium_type = html.xpath(".//li[text()='\n演出场馆']/@data-typeid")[0] if html.xpath(".//li[text()='\n演出场馆']/@data-typeid") != [] else None
+
+
+        hospitals_name = html.xpath(".//ul[@data-typeid='%s']/li/@title" %hospital_type)
+        hospitals_value = html.xpath(".//ul[@data-typeid='%s']/li/@data-id" %hospital_type)
+
+        schools_name = html.xpath(".//ul[@data-typeid='%s']/li/@title" %school_type)
+        schools_value = html.xpath(".//ul[@data-typeid='%s']/li/@data-id" %school_type)
+
+        stadiums_name = html.xpath(".//ul[@data-typeid='%s']/li/@title" % stadium_type)
+        stadiums_value = html.xpath(".//ul[@data-typeid='%s']/li/@data-id" % stadium_type)
+
+        if school_type:
+            self.insert_school(schools_name,schools_value,city_id,city_kw)
+        if hospital_type:
+            self.insert_hospital(hospitals_name,hospitals_value,city_id,city_kw)
+        if stadium_type:
+            self.insert_stadium(stadiums_name,stadiums_value,city_id,city_kw)
+
+    def insert_hospital(self,names,ids,cid,city_kw):
+        sql = "insert into Hospital (HospId,CId,Name,Lat,Lng) values "
+        for name in names:
+            lat,lng = self.other_position(name,city_kw)
+            ind = names.index(name)
+            id = ids[ind]
+            sql = sql + "('%s','%s','%s','%f','%f')" %(id,cid,str(name),float(lat),float(lng))
+        sql = sql.replace(')(', '),(')
+        try:
+            self.cur.execute(sql)
+        except:
+            pass
+        self.conn.commit()
+
+    def insert_school(self,names,ids,cid,city_kw):
+        sql = "insert into School (SchId,CId,Name,Lat,Lng) values "
+        for name in names:
+            lat, lng = self.other_position(name,city_kw)
+            ind = names.index(name)
+            id = ids[ind]
+            sql = sql + "('%s','%s','%s','%f','%f')" %(id,cid,str(name),float(lat),float(lng))
+        sql = sql.replace(')(', '),(')
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            pass
+        self.conn.commit()
+
+    def insert_stadium(self,names,ids,cid,city_kw):
+        sql = "insert into Stadium (StaId,CId,Name,Lat,Lng) values "
+        for name in names:
+            lat, lng = self.other_position(name,city_kw)
+            ind = names.index(name)
+            id = ids[ind]
+            sql = sql + "('%s','%s','%s','%f','%f')" %(id,cid,str(name),float(lat),float(lng))
+        sql = sql.replace(')(', '),(')
+        try:
+            self.cur.execute(sql)
+        except:
+            pass
+        self.conn.commit()
+
+    def other_position(self,keyword,city_kw):
+        url = "http://apis.map.qq.com/jsapi?qt=poi&wd={keyword}&pn=0&rn=10&rich_source=qipao&rich=web&nj=0&c=1&key=FBOBZ-VODWU-C7SVF-B2BDI-UK3JE-YBFUS&output=jsonp&pf=jsapi&ref=jsapi&cb=qq.maps._svcb3.search_service_0"
+        url2 = "http://restapi.amap.com/v3/place/text?s=rsv3&children=&key=169d2dd7829fe45690fabec812d05bc3&offset=10&page=1&language=zh_cn&callback=jsonp_587969_&platform=JS&logversion=2.0&sdkversion=1.3&appname=http%3A%2F%2Fwww.gpsspg.com%2Fiframe%2Fmaps%2Famap_161128.htm%3Fmapi%3D3&csid=5BA24A15-D366-4B8E-9A4B-ED74E012696B&keywords={kw}"
+
+        headers = {
+            "Referer":"http://www.gpsspg.com/iframe/maps/qq_161128.htm?mapi=2",
+            "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36"
+        }
+        response = requests.get(url.format(keyword=keyword),headers=headers)
+
+        json_resp = json.loads(response.content.decode("GBK")[67:-1])
+        try:
+            lng = json_resp["detail"]["pois"][0]["pointx"]
+            lat = json_resp["detail"]["pois"][0]["pointy"]
+        except Exception as e:
+            response = requests.get(url2.format(kw=(str(city_kw)+str(keyword))),headers=headers)
+            rep_json = json.loads(response.content.decode()[14:-1])
+            try:
+                location1 = rep_json["pois"][0]["location"]
+            except Exception as e:
+                response = requests.get(url.format(keyword=str(city_kw)+str(keyword)),headers=headers)
+                json_resp = json.loads(response.content.decode("GBK")[67:-1])
+                try:
+                    lng = json_resp["detail"]["pois"][0]["pointx"]
+                    lat = json_resp["detail"]["pois"][0]["pointy"]
+                except:
+                    lat = 0
+                    lng = 0
+            else:
+                lng,lat = location1.split(",")
+        return lat,lng
+
     def run(self):
 
         city_response = requests.get("http://hotels.ctrip.com/Domestic/Tool/AjaxGetCitySuggestion.aspx", headers=city_headers)
@@ -353,39 +464,40 @@ class Location_XC:
         ret = set(ret)
         ret_hot = re.findall(r'suggestion={热门:\[(.*?)\],AB',city_response.content.decode())[0]
         ret_hot = re.findall(r'data:"(.*?)",',ret_hot)
-        yet_ret = self.select_scen()
-        all_ret = []
+        # yet_ret = self.select_scen()
+        # all_ret = []
         # print(yet_ret)
+        # noli = [["qionghai_boao","琼海","52"],["qiqihaer","齐齐哈尔","149"],["hulunbeier","呼伦贝尔","4255"]]
         for i in ret:
             i.replace("/",'')
             ret2 = i.split("|")
-            ret2.pop(1)
-            all_ret.append(ret2[1])
+            # ret2.pop(1)
+            print(ret2)
+            self.elong_lacation(ret2)
+            # all_ret.append(ret2[1])
             # self.loc_business(ret2[1])
             # self.loc_station(ret2[1])
             # self.loc_subway(ret2[1])
             # self.loc_admin(ret2[1])
-            self.loc_scenis("492")
-            break
-        # for k in yet_ret:
-        #     all_ret.remove(k)
-        # print(len(all_ret))
-        # for v in all_ret:
-        #     self.loc_scenis(v)
-        # for v in all_ret
+            # self.loc_scenis("492")
+            sleep(1)
+        # self.other_position("文登师范学校")
+        # self.select_scen()
     def select_scen(self):
-        sql = "select cid from Scenic group by cid"
+        # 查询剩余 并添加到redis
+        sql = "select name,cid from City where Cname not in (select cid from OtherFacility group by cid)"
         self.cur.execute(sql)
         ret = self.cur.fetchall()
         import numpy
         li = numpy.array(ret)
         # print(len(li))
-        list1 = []
         for i in li:
-            ret = str(i[0]).replace(" ",'')
-            list1.append(ret)
-            # self.loc_scenis(ret)
-        return list1
+            # ret = str(i[0]).replace(" ",'')
+            i = list(i)
+            print(i)
+            redis_server.lpush("city",i)
+            # self.loc_scenis()
+        # return list1
 if __name__ == '__main__':
     location = Location_XC()
     location.run()
