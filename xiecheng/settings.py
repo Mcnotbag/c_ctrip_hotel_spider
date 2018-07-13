@@ -99,7 +99,7 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # DOWNLOAD_TIMEOUT = 300
-# DOWNLOAD_DELAY = random.uniform(1,2)
+DOWNLOAD_DELAY = random.uniform(4,5)
 
 # LOG_LEVEL = 'WARNING'
 LOG_FILE = ".\\XC_spider.log"

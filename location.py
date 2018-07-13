@@ -8,11 +8,12 @@ import pymssql
 import threading
 from pprint import pprint
 from time import sleep
+from urllib import parse
 
 from lxml import etree
 from redis import Redis
 import requests
-redis_server = Redis(host="119.145.8.188",port=6379,decode_responses=True)
+redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
 
 # # # # #
 city_headers = {
@@ -59,7 +60,7 @@ headers = {
 }
 class Location_XC:
     def __init__(self):
-        self.conn = pymssql.connect(host='119.145.8.188:16433', user='sa', password='Ecaim6688', database='HotelSpider')
+        self.conn = pymssql.connect(host='119.145.8.187:16433', user='sa', password='Ecaim6688.', database='HotelSpider')
         self.cur = self.conn.cursor()
         self.q = queue.Queue()
     def __del__(self):
@@ -485,7 +486,8 @@ class Location_XC:
         # self.select_scen()
     def select_scen(self):
         # 查询剩余 并添加到redis
-        sql = "select name,cid from City where Cname not in (select cid from OtherFacility group by cid)"
+        # sql = "select name,cid from City where Cname not in (select cid from OtherFacility group by cid)"
+        sql = "select name,cid from City where Cname not in (select cid from HotelFacility group by cid)"
         self.cur.execute(sql)
         ret = self.cur.fetchall()
         import numpy
@@ -498,7 +500,39 @@ class Location_XC:
             redis_server.lpush("city",i)
             # self.loc_scenis()
         # return list1
+    def insert_province(self):
+        sql = "select Cname from City where Province is null"
+        self.cur.execute(sql)
+        ret = self.cur.fetchall()
+        import numpy
+        li = numpy.array(ret)
+        for i in li:
+            city = i[0]
+            print(city)
+            self.city_get_province(city)
+    def city_get_province(self,kw):
+        # url = "http://map.baidu.com/su?wd={kw}&cid=&type=0&newmap=1&b=(12603448.99999989%2C4080433.750006226%3B12647608.99999989%2C4131249.750006226)&t=1531279208268&pc_ver=2"
+        url = "http://hotels.ctrip.com/Domestic/Tool/AjaxDestination.aspx?keyword={kw}&from=domestic"
+        keywords = parse.quote(kw)
+        response = requests.get(url.format(kw=keywords))
+        json_res = json.loads(response.content.decode()[21:-1])
+        ret = json_res["data"].split("，")[1]
+        ret = re.match(r"(\w+)\|City",ret).group(1)
+        province = ret + "省"
+        print(province)
+
+        sql = "update City set Province='%s' where Cname='%s'" %(str(province),str(kw))
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            print(e)
+        self.conn.commit()
+
+
 if __name__ == '__main__':
     location = Location_XC()
-    location.run()
-    # location.select_scen()
+    # location.run()
+    location.select_scen()
+    # location.insert_province()
+    # location.city_get_province("郑州")
+

@@ -33,7 +33,7 @@ from scrapy_redis.scheduler import Scheduler
 详情页：http://hotels.ctrip.com/Domestic/tool/AjaxHote1RoomListForDetai1.aspx?psid=&MasterHotelID=6461667&hotel=6461667&EDM=F&roomId=&IncludeRoom=&city=30&showspothotel=T&supplier=&IsDecoupleSpotHotelAndGroup=F&contrast=0&brand=594&startDate=2018-05-08&depDate=2018-05-09&IsFlash=F&RequestTravelMoney=F&hsids=&IsJustConfirm=&contyped=0&priceInfo=-1&equip=&filter=&productcode=&couponList=&abForHuaZhu=&defaultLoad=T&TmFromList=F&RoomGuestCount=1,1,0&eleven=57edcb55890ff7224025d0f76c03131f9a23079ddae2ae5c00fb75b9a0c23fc5&callback=CASqinzsxIZFTSRGrMk&_=1525749361046
        "http://hotels.ctrip.com/Domestic/tool/AjaxHote1RoomListForDetai1.aspx"
 """
-redis_server = Redis(host="119.145.8.188",port=6379,decode_responses=True)
+redis_server = Redis(host="111.230.34.217",port=6379,decode_responses=True)
 def process_urltime():
     now = datetime.date.today()
     tomorrw = now + datetime.timedelta(days=1)
