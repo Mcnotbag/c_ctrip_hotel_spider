@@ -10,6 +10,10 @@ import time
 from pprint import pprint
 import pymssql
 
+import os
+import requests
+
+
 class XiechengPipeline(object):
     def __init__(self):
         self.conn = pymssql.connect(host='119.145.8.188:16433', user='sa', password='Ecaim6688', database='HotelSpider')
@@ -100,8 +104,11 @@ class XiechengPipeline(object):
             self.insert_Ofacility(item)
             self.insert_Allimage(item)
             return item
-        elif spider.name == 'relation':
-            print(item)
+        elif spider.name == 'Images':
+            self.unite_sql_Allimages(item)
+            print(item["HId"])
+            return item
+
 
     # 插入数据库
     def insert_hotel(self,item):
@@ -398,3 +405,46 @@ class XiechengPipeline(object):
             # print(e)
             pass
         self.conn.commit()
+
+    def unite_sql_Allimages(self,item):
+        neijing = [2,3,4,11,15,16,30,31,32,33,34,35,36,37,38,39,40,41,42,43,17]
+        waiguan = [1]
+        fangjian = [6,14]
+        qita = [5,13,46]
+        for pid in item["pic_id"]:
+            ind = item["pic_id"].index(pid)
+            title = item["pic_title"][ind]
+            url = item["pic_url"][ind]
+            Ttitle_ = item["pic_Ttitle"][ind]
+            if int(Ttitle_) in neijing:
+                Ttitle = "内景"
+            elif int(Ttitle_) in waiguan:
+                Ttitle = "外观"
+            elif int(Ttitle_) in fangjian:
+                Ttitle = "房间"
+            elif int(Ttitle_) in qita:
+                Ttitle = "其他"
+            sql = "if exists(select top 1 * from HotelSpider.dbo.AllImage where PId = '%s')" % str(pid) + \
+                  " begin update AllImage set TopTitle='%s' where PId='%s' end" % (str(Ttitle),str(pid)) + \
+                  " else begin INSERT INTO AllImage (PId,HId,Title,Url,TopTitle) VALUES ('%s','%s','%s','%s','%s') end" % (
+                    str(pid),str(item["HId"]),str(title),str(url),str(Ttitle)
+                  )
+            try:
+                self.cur.execute(sql)
+            except Exception as e:
+                print(e)
+            self.conn.commit()
+            self.Download_pic(item,Ttitle,pid,url)
+
+
+    def Download_pic(self,item,Ttitle,pid,url):
+
+        file_path = "images/"+item["City"]+"/"+item["HId"]+"/"+Ttitle
+        if os.path.exists(file_path) == False:
+            os.makedirs(file_path)
+        file_name = "/" + pid
+        url = "http:" + url
+        response = requests.get(url)
+
+        with open(file_path+file_name+".jpg","wb") as f:
+            f.write(response.content)
