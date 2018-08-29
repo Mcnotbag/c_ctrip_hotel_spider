@@ -24,7 +24,7 @@ class XiechengPipeline(object):
 
     def process_item(self, item, spider):
         if spider.name == 'XC':
-            item["Roomtype"]["Rarea"] = item["Roomtype"]["Rarea"][1] if item["Roomtype"]["Rarea"] != [] else []
+            # item["Roomtype"]["Rarea"] = item["Roomtype"]["Rarea"][1] if item["Roomtype"]["Rarea"] != [] else []
             # 清洗设施
             item["RoomFacility"] = [i.replace(" ","").replace("\n","") for i in item["RoomFacility"]] if item["RoomFacility"] != [] else []
             while '' in item["RoomFacility"]:
@@ -32,10 +32,10 @@ class XiechengPipeline(object):
             item["RoomFacility"] = [str(i) for i in item["RoomFacility"]]
             item["RoomFacility"] = ''.join(item["RoomFacility"])
 
-            # 清洗bed
-            item["Roomtype"]["Rbed"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rbed"]][1] if item["Roomtype"]["Rbed"] != [] else []
-            # 清洗Rfloor
-            item["Roomtype"]["Rfloor"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rfloor"]][1] if item["Roomtype"]["Rfloor"] != [] else []
+            # # 清洗bed
+            # item["Roomtype"]["Rbed"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rbed"]][1] if item["Roomtype"]["Rbed"] != [] else []
+            # # 清洗Rfloor
+            # item["Roomtype"]["Rfloor"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rfloor"]][1] if item["Roomtype"]["Rfloor"] != [] else []
             # 清洗Rtitle
             # item["Roomtype"]["Rtitle"] = [i.replace(" ","").replace("\n","") for i in item["Roomtype"]["Rtitle"]][0].replace("\t","") if item["Roomtype"]["Rtitle"] != [] else []
 
@@ -96,18 +96,39 @@ class XiechengPipeline(object):
             """conn.execute_non_query("INSERT INTO persons VALUES(1, 'John Doe')")"""
 
             self.unite_sql_hotel(item)
-            self.unite_sql_room(item)
+            if item["Roomtype"]["price"]:
+                item["Roomtype"]["price"] = item["Roomtype"]["price"][0]
+                self.unite_sql_room(item)
             self.unite_sql_price(item)
             # for image in item["Roomtype"]["Rimage"]:
-            self.insert_image(item)
+            # self.insert_image(item)
             self.insert_Hfacility(item)
             self.insert_Ofacility(item)
-            self.insert_Allimage(item)
+            # self.insert_Allimage(item)
             return item
         elif spider.name == 'Images':
             self.unite_sql_Allimages(item)
             print(item["HId"])
             return item
+
+        elif spider.name == "Comment":
+            item["content"] = item["content"].replace("\n",'').replace("'",'').replace(" ",'')
+            if len(item["content"]) < 15:
+                return item
+            if len(item["B_image"]) != len(item["S_image"]):
+                return item
+            if int(item["Sall"]) < 4:
+                return item
+            if len(item["B_image"]) < 1:
+                return item
+
+            self.insert_comment(item)
+            self.insert_commentImage(item)
+            # print(item)
+            return item
+
+
+
 
 
     # 插入数据库
@@ -326,11 +347,11 @@ class XiechengPipeline(object):
 
     def unite_sql_room(self,item):
         sql = "if exists(select top 1 * from HotelSpider.dbo.Room where RId = '%s')" % str(item["Roomtype"]["RId"]) + \
-              " begin update Room set Cover='%s',Name='%s',Price='%.2f',UpdateTime='%s' where RId='%s' end" %(str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),
-                                                                                                              str(datetime.datetime.now())[:23],str(item["Roomtype"]["RId"]))+ \
+              " begin update Room set Cover='%s',Name='%s',Price='%.2f',Floor='%s',Area='%s',Bed='%s',UpdateTime='%s' where RId='%s' end" %(str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),
+                                                                                                              str(item["Roomtype"]["Rfloor"]),str(item["Roomtype"]["Rarea"]),str(item["Roomtype"]["Rbed"]),str(datetime.datetime.now())[:23],str(item["Roomtype"]["RId"]))+ \
               " else begin INSERT INTO Room (Source, HId, RId, Cover, Name, Floor, Area, Price, People, Bed) VALUES ('%d','%s','%s','%s','%s','%s','%s','%.2f','%d','%s') end" %(
             int((item["Source"])),str(item["HId"]),str(item["Roomtype"]["RId"]),str(item["Roomtype"]["Rcover"]),str(item["Roomtype"]["Rtitle"]),
-            str(item["Roomtype"]["Rfloor"]),str(item["Roomtype"]["Rarea"]),float(item["Roomtype"]["room"]["price"]),int(item["Roomtype"]["room"]["people"]),str(item["Roomtype"]["Rbed"])
+            str(item["Roomtype"]["Rfloor"]),str(item["Roomtype"]["Rarea"]),float(item["Roomtype"]["price"]),int(item["Roomtype"]["room"]["people"]),str(item["Roomtype"]["Rbed"])
         )
         try:
             self.cur.execute(sql)
@@ -341,10 +362,10 @@ class XiechengPipeline(object):
 
     def unite_sql_price(self,item):
         sql = "if exists(select top 1 * from HotelSpider.dbo.Price where PId = '%s')" %str(item["Roomtype"]["room"]["PId"]) + \
-              " begin update Price set Name='%s',Price='%.2f',UpdateTime='%s' where PId='%s' end" %(str(item["Roomtype"]["Rtitle"]),float(item["Roomtype"]["room"]["price"]),
+              " begin update Price set Name='%s',Price='%.2f',UpdateTime='%s' where PId='%s' end" %(str(item["Roomtype"]["room"]["name"]),float(item["Roomtype"]["room"]["price"]),
                                                                                                     str(datetime.datetime.now())[:23],str(item["Roomtype"]["room"]["PId"]))+ \
               " else begin INSERT INTO Price (Source, HId, RId, PId, Name, Meal, Price) VALUES ('%d','%s','%s','%s','%s','%s','%.2f') end" %(
-            int((item["Source"])),str(item["HId"]),str(item["Roomtype"]["RId"]),str(item["Roomtype"]["room"]["PId"]),str(item["Roomtype"]["Rtitle"]),str(item["Roomtype"]["room"]["breakfast"]), float(item["Roomtype"]["room"]["price"])
+            int((item["Source"])),str(item["HId"]),str(item["Roomtype"]["RId"]),str(item["Roomtype"]["room"]["PId"]),str(item["Roomtype"]["room"]["name"]),str(item["Roomtype"]["room"]["breakfast"]), float(item["Roomtype"]["room"]["price"])
         )
 
         try:
@@ -448,3 +469,28 @@ class XiechengPipeline(object):
 
         with open(file_path+file_name+".jpg","wb") as f:
             f.write(response.content)
+
+
+    def insert_comment(self,item):
+        sql = "INSERT INTO Comment (UserName,Sall,Shealth,Sserver,Saround,Sfaci,HId,RoomName,Date,[Content],OID) VALUES ('%s','%f','%f','%f','%f','%f','%s','%s','%s','%s','%s')" %(
+            str(item["User"]),float(item["Sall"]),float(item["Shealth"]),float(item["Sserver"]),float(item["Saround"]),float(item["Sfaci"]),str(item["HId"]),str(item["Room"]),str(item["date"]),str(item["content"]),str(item["OId"]))
+
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            pass
+        self.conn.commit()
+
+    def insert_commentImage(self,item):
+        sql = "insert into CommentImage(OId,BUrl,SUrl,ImageId) VALUES "
+        for _ in item["B_image"]:
+            ind = item["B_image"].index(_)
+            sql = sql + "('%s','%s','%s','%s')" % (item["OId"],_,item["S_image"][ind],str(item["ImageId"][ind]))
+        sql = sql.replace(')(', '),(')
+
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            pass
+        self.conn.commit()
+
